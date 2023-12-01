@@ -1,0 +1,4 @@
+config load arena-clock.ioc
+generate code .
+exit
+

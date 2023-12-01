@@ -1,0 +1,13 @@
+{
+    "name": "cube",
+    "platforms": ["ststm32"],
+    "frameworks": ["stm32cube"],
+    "dependencies": [
+    ],
+    "build": {
+        "includeDir": "Inc",
+        "sourceDir": "Src",
+        "libArchive": false
+    }
+}
+
