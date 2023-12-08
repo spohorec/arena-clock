@@ -29,13 +29,18 @@ class SerialWorker(QThread):
     def stop(self):
         self._stop_flag = True
 
+# Timer class to write commands to the nucleo
 class Timer(QObject):
     _time_set_signal = pyqtSignal()
     _time_start_signal = pyqtSignal()
     _time_pause_signal = pyqtSignal()
+
+    STATE_IDLE = 0
+    STATE_RUNNING = 1
+    STATE_PAUSED = 2
     def __init__(self, port):
         super().__init__()
-        self._running = False
+        self._state = self.STATE_IDLE
         self._time_set = False
         self._ser = serial.Serial(port, 9600, timeout=1)
 
@@ -45,153 +50,180 @@ class Timer(QObject):
 
 
     def __del__(self):
-        self._ser.close()
+        self._ser.close() # close serial port on destruction
         
+    # Signal getters
     def GetTimerDoneSignal(self):
         return self._timer_done_signal
+    def GetTimerStartSignal(self):
+        return self._timer_start_signal
+    def GetTimerPauseSignal(self):
+        return self._timer_pause_signal
+    def GetTimeSetSignal(self):
+        return self._time_set_signal
+
+    # Status getters
     def IsRunning(self):
-        return self._running;
+        return self._state == self.STATE_RUNNING
     def IsTimeSet(self):
         return self._time_set
+
+    # Timer done handler
     def TimerDone(self):
-        self._running = False
+        self._state = self.STATE_IDLE
         self._time_set = False
+
+    #Handle timer actions
     def SetTime(self, time_s):
-        if (time_s > 255):
+        if (time_s > 255) || (time_s < 0):
             return
-        #if self.IsRunning():
-        #    return
+        if self._state != self.STATE_IDLE
+            # Can only set time when system is idle
+            return
         self._ser.write(bytearray([2, time_s]))
         rep = self._ser.read(2)
         if (rep[0] != 2 or rep[1] !=1):
+            # incorrect response type or command failed
             return
         self._time_set = True;
         self._time_set_signal.emit()
+
     def Start(self):
+        if self._state == self.STATE_RUNNING:
+            return
         self._ser.write(bytearray([3, 0]))
         rep = self._ser.read(2)
         if (rep[0] != 3 or rep[1] !=1):
             return
-        self._running = True
-        self._worker.start()
+        self._state = self.STATE_RUNNING
+        self._worker.start() # start worker to monitor for timer done notification
         self._time_start_signal.emit()
+
     def Pause(self):
+        if self._state != self.STATE_RUNNING:
+            return
         self._worker.stop()
-        while (not self._worker._stopped):
+        while not self._worker._stopped:
+            # wait for worker to stop before using the serial port
             continue;
         self._ser.write(bytearray([4, 0]))
         rep = self._ser.read(2)
         if (rep[0] != 4 or rep[1] !=1):
             return
-        self._running = False
+        self._state = self.STATE_PAUSED
         self._time_pause_signal.emit()
+
     def Clear(self):
+        if self._state == self.STATE_RUNNING:
+            return
         self._ser.write(bytearray([5, 0]))
         rep = self._ser.read(2)
         if (rep[0] != 5 or rep[1] !=1):
-            print("bad response from clear!")
             return
-        self._running = False
+        self._state = self.STATE_IDLE
         self._time_set = False
         self._timer_done_signal.emit()
-    def Finish(self):
-        print("hello")
-        return
 
+# APP =========================================================================
 
+# Get serial port from arguments
 port = sys.argv[1]
 timer = Timer(port)
 
+# Create app and window
 app = QApplication([])
 window = QWidget()
 
-
+# Create widgets
 start_pause_button = QPushButton('Start')
-start_pause_button.setDisabled(True)
 clear_button = QPushButton('Clear')
 set_time_button = QPushButton('Set Time')
-
 timer_widget = QTimeEdit()
 
+# Setup for widgets
+timer_widget.setDisplayFormat("mm:ss")
+start_pause_button.setDisabled(True)
+
+# Button handlers
 def on_start_pause_button_click():
-    #btn = QApplication.focusWidget()
     if timer.IsRunning():
         timer.Pause()
-        #start_pause_button.setText('Start')
-        #clear_button.setDisabled(False)
     else:
         # timer not running
         timer.Start()
-        #start_pause_button.setText('Pause')
-        #clear_button.setDisabled(True)
-        
 
 def on_clear_button_click():
     timer.Clear()
 
+def on_set_time_button_click():
+    time = timer_widget.time()
+    time_s = time.minute()*60+time.second() # convert to seconds
+    timer.SetTime(time_s)
+
+# Button connections
+start_pause_button.clicked.connect(on_start_pause_button_click)
+clear_button.clicked.connect(on_clear_button_click)
+set_time_button.clicked.connect(on_set_time_button_click)
+
+# Widget state updaters, based on timer actions
 def on_timer_start():
-    # gray out clear
+    # disable clear
     clear_button.setDisabled(True)
-    # start > pause
+    # display "pause"
+    # enable start/pause button
     start_pause_button.setText('Pause')
-    # gray out time set
+    start_pause_button.setDisabled(False)
+    # disable time set
     set_time_button.setDisabled(True);
+    timer_widget.setDisabled(True)
 
 def on_timer_pause():
-    # active clear
+    # enable clear
     clear_button.setDisabled(False)
-    # pause > start
+    # display "start"
+    # enable start/pause button
     start_pause_button.setText('Start')
-    # gray out time set
+    start_pause_button.setDisabled(False)
+    # disable time set
     set_time_button.setDisabled(True);
+    timer_widget.setDisabled(True)
 
 def on_timer_finish():
-    # disable start button
+    # display "start"
+    # disable start/pause button
     start_pause_button.setText('Start')
     start_pause_button.setDisabled(True)
-    # active clear
+    # enable clear
     clear_button.setDisabled(False)
-    # set time button disable
+    # enable time set
     set_time_button.setDisabled(False);
     timer_widget.setDisabled(False)
 
 def on_timer_time_set():
-    # activate start button
+    # display "start"
+    # enable start button
     start_pause_button.setText('Start')
     start_pause_button.setDisabled(False)
-    timer_widget.setDisabled(True)
+    # enable clear
+    clear_button.setDisabled(False)
+    # enable time set
+    set_time_button.setDisabled(False);
+    timer_widget.setDisabled(False)
 
 
+# Connect timer signals to handlers
 timer.GetTimerDoneSignal().connect(on_timer_finish)
-timer._time_start_signal.connect(on_timer_start)
-timer._time_pause_signal.connect(on_timer_pause)
-timer._time_set_signal.connect(on_timer_time_set)
+timer.GetTimerStartSignal().connect(on_timer_start)
+timer.GetTimerPauseSignal().connect(on_timer_pause)
+timer.GetTimeSetSignal().connect(on_timer_time_set)
 
+# Layouts
 outer_layout = QVBoxLayout()
 hlayout1 = QHBoxLayout()
 hlayout2 = QHBoxLayout()
 
-# Timer display
-timer_widget.setDisplayFormat("mm:ss")
-
-def on_set_time_button_click():
-    time = timer_widget.time()
-    time_s = time.minute()*60+time.second()
-    timer.SetTime(time_s)
-
-
-set_time_button.clicked.connect(on_set_time_button_click)
-
 hlayout1.addWidget(timer_widget)
 hlayout1.addWidget(set_time_button)
-
-# Buttons
-start_pause_button.clicked.connect(on_start_pause_button_click)
-
-clear_button.clicked.connect(on_clear_button_click)
-
-def ResetOnTimerDone():
-    clear_button.setText('Start')
 
 hlayout2.addWidget(start_pause_button)
 hlayout2.addWidget(clear_button)
@@ -199,7 +231,6 @@ hlayout2.addWidget(clear_button)
 # Add row layouts
 outer_layout.addLayout(hlayout1)
 outer_layout.addLayout(hlayout2)
-
 
 # Outer  layout
 window.setLayout(outer_layout)
