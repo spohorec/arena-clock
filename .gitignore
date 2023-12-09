@@ -1,4 +1,4 @@
 .pio
 .mxproject
-lib/cube/Src
-lib/cube/Inc
+firmware/lib/cube/Src
+firmware/lib/cube/Inc
