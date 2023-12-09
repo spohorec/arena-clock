@@ -1,0 +1,20 @@
+--- Src/main.c	2023-11-30 21:17:16.090792550 -0500
++++ Src/main-new.c	2023-11-30 21:17:37.395157793 -0500
+@@ -26,6 +26,8 @@
+ /* Private includes ----------------------------------------------------------*/
+ /* USER CODE BEGIN Includes */
+ 
++#include "main_loop.h"
++
+ /* USER CODE END Includes */
+ 
+ /* Private typedef -----------------------------------------------------------*/
+@@ -93,6 +95,8 @@
+   MX_TIM16_Init();
+   /* USER CODE BEGIN 2 */
+ 
++  MainLoop();
++
+   /* USER CODE END 2 */
+ 
+   /* Infinite loop */
