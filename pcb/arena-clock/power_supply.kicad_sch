@@ -4,6 +4,13 @@
 
   (paper "A4")
 
+  (title_block
+    (title "Arena Clock Carrier")
+    (date "2023-11-19")
+    (rev "1.0")
+    (company "MassDestruction (Sarah Pohorecky)")
+  )
+
   (lib_symbols
     (symbol "Connector:Barrel_Jack_Switch_MountingPin" (pin_names hide) (in_bom yes) (on_board yes)
       (property "Reference" "J" (id 0) (at 0 5.334 0)

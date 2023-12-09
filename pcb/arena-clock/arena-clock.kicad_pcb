@@ -5,6 +5,13 @@
   )
 
   (paper "A4")
+  (title_block
+    (title "Arena Clock Carrier")
+    (date "2023-11-19")
+    (rev "1.0")
+    (company "MassDestruction (Sarah Pohorecky)")
+  )
+
   (layers
     (0 "F.Cu" signal)
     (31 "B.Cu" signal)
