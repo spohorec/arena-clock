@@ -2,3 +2,5 @@
 .mxproject
 lib/cube/Src
 lib/cube/Inc
+pcb/arena-clock/arena-clock-backups/
+*.swp
