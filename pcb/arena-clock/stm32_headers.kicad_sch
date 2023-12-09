@@ -4,6 +4,13 @@
 
   (paper "A4")
 
+  (title_block
+    (title "Arena Clock Carrier")
+    (date "2023-11-19")
+    (rev "1.0")
+    (company "MassDestruction (Sarah Pohorecky)")
+  )
+
   (lib_symbols
     (symbol "Connector:Conn_01x15_Female" (pin_names (offset 1.016) hide) (in_bom yes) (on_board yes)
       (property "Reference" "J" (id 0) (at 0 20.32 0)
@@ -403,7 +410,6 @@
       )
     )
   )
-
 
   (junction (at 91.44 93.98) (diameter 0) (color 0 0 0 0)
     (uuid 1036db97-6559-46d8-8548-a904288b234c)
