@@ -75,9 +75,9 @@ class Timer(QObject):
 
     # Serial command helper
     def SerialCommand(command_num : int, argument : int = 0):
-        if command_num > 0xFF or argument > 0xFF:
+        if command_num > 0xFF or argument > 0xFFFF:
             return False
-        self._ser.write(byte_array([command_num, argument])
+        self._ser.write(byte_array([command_num, (argument & 0xFF00) >> 8 , argument & 0x00FF])
         rep = self._ser.read(2)
         if (rep[0] != command_num or rep[1] != 1):
             return False

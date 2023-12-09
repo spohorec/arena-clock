@@ -7,8 +7,8 @@
 #include "timer.h"
 
 
-uint8_t uart_rx_buffer[kCommandBufferLen];
-uint8_t uart_tx_buffer[kCommandBufferLen];
+uint8_t uart_rx_buffer[kCommandBufferRXLen];
+uint8_t uart_tx_buffer[kCommandBufferTXLen];
 
 /* HAL Objects */
 UART_HandleTypeDef extern huart2;
@@ -39,7 +39,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 void NotifyTimerComplete()
 {
     PopulateTimerCompleteNotification(uart_tx_buffer);
-    HAL_UART_Transmit(&huart2, uart_tx_buffer, kCommandBufferLen, 100);
+    HAL_UART_Transmit(&huart2, uart_tx_buffer, kCommandBufferTXLen, 100);
 }
 
 
@@ -48,7 +48,7 @@ void MainLoop(void)
 {
     ShiftRegister_Init();
     Timer_Init(&htim16);
-    HAL_UART_Receive_IT(&huart2, uart_rx_buffer, kCommandBufferLen);
+    HAL_UART_Receive_IT(&huart2, uart_rx_buffer, kCommandBufferRXLen);
     GPIO_SetPin(nuc_led, led_state);
 
     for (;;) {
@@ -56,8 +56,8 @@ void MainLoop(void)
         if (uart_rx_flag) {
             uart_rx_flag = false;
             ProcessCommand(uart_rx_buffer, uart_tx_buffer);
-            HAL_UART_Transmit(&huart2, uart_tx_buffer, kCommandBufferLen, 100);
-            HAL_UART_Receive_IT(&huart2, uart_rx_buffer, kCommandBufferLen);
+            HAL_UART_Transmit(&huart2, uart_tx_buffer, kCommandBufferTXLen, 100);
+            HAL_UART_Receive_IT(&huart2, uart_rx_buffer, kCommandBufferRXLen);
         }
 
         // Handle one second timer

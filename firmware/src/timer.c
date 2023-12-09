@@ -7,12 +7,12 @@
 
 
 // Timer state and time
-static uint8_t timer_remaining_time;
+static uint16_t timer_remaining_time;
 static timer_state_t timer_state;
 static TIM_HandleTypeDef* htim;  
 
 /* Local Functions */
-static void PutTimeOnDigits(uint8_t time_s) {
+static void PutTimeOnDigits(uint16_t time_s) {
     uint8_t digit_1, digit_2, digit_3;
 
     // Calc minutes and seconds from seconds
@@ -47,7 +47,7 @@ timer_state_t Timer_GetState(void)
     return timer_state;
 }
 
-void Timer_SetTime(uint8_t n_secs)
+void Timer_SetTime(uint16_t n_secs)
 {
     if (timer_state == TIMER_STATE_IDLE) {
         timer_remaining_time = n_secs;
