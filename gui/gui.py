@@ -73,17 +73,24 @@ class Timer(QObject):
         self._state = self.STATE_IDLE
         self._time_set = False
 
+    # Serial command helper
+    def SerialCommand(command_num : int, argument : int = 0):
+        if command_num > 0xFF or argument > 0xFF:
+            return False
+        self._ser.write(byte_array([command_num, argument])
+        rep = self._ser.read(2)
+        if (rep[0] != command_num or rep[1] != 1):
+            return False
+        return True
+
     #Handle timer actions
     def SetTime(self, time_s):
-        if (time_s > 255) || (time_s < 0):
+        if (time_s > 60*9+59) || (time_s < 0):
             return
         if self._state != self.STATE_IDLE
             # Can only set time when system is idle
             return
-        self._ser.write(bytearray([2, time_s]))
-        rep = self._ser.read(2)
-        if (rep[0] != 2 or rep[1] !=1):
-            # incorrect response type or command failed
+        if not self.SerialCommand(2, time_s):
             return
         self._time_set = True;
         self._time_set_signal.emit()
@@ -91,9 +98,7 @@ class Timer(QObject):
     def Start(self):
         if self._state == self.STATE_RUNNING:
             return
-        self._ser.write(bytearray([3, 0]))
-        rep = self._ser.read(2)
-        if (rep[0] != 3 or rep[1] !=1):
+        if not self.SerialCommand(3):
             return
         self._state = self.STATE_RUNNING
         self._worker.start() # start worker to monitor for timer done notification
@@ -106,9 +111,7 @@ class Timer(QObject):
         while not self._worker._stopped:
             # wait for worker to stop before using the serial port
             continue;
-        self._ser.write(bytearray([4, 0]))
-        rep = self._ser.read(2)
-        if (rep[0] != 4 or rep[1] !=1):
+        if not self.SerialCommand(4):
             return
         self._state = self.STATE_PAUSED
         self._time_pause_signal.emit()
@@ -116,9 +119,7 @@ class Timer(QObject):
     def Clear(self):
         if self._state == self.STATE_RUNNING:
             return
-        self._ser.write(bytearray([5, 0]))
-        rep = self._ser.read(2)
-        if (rep[0] != 5 or rep[1] !=1):
+        if not self.SerialCommand(5):
             return
         self._state = self.STATE_IDLE
         self._time_set = False
