@@ -12,7 +12,7 @@ typedef enum {
 void Timer_OneSecCallback(void);
 timer_state_t Timer_GetState(void);
 
-void Timer_SetTime(uint8_t n_secs);
+void Timer_SetTime(uint16_t n_secs);
 void Timer_Start(void);
 void Timer_Pause(void);
 void Timer_Clear(void);

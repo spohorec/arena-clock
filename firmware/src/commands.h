@@ -3,7 +3,8 @@
 
 #include <stdint.h>
 
-#define kCommandBufferLen 2
+#define kCommandBufferTXLen 2
+#define kCommandBufferRXLen 3
 
 void ProcessCommand(uint8_t *rx_buf, uint8_t *tx_buf);
 void PopulateTimerCompleteNotification(uint8_t * tx_buf);

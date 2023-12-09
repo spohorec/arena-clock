@@ -29,7 +29,7 @@ int ProcessHelloCommand(void)
     return 1;
 }
 
-int ProcessSetTimeCommand(uint8_t n_secs)
+int ProcessSetTimeCommand(uint16_t n_secs)
 {
     if (n_secs > 599) { // Can only go up to 9:59
         return 0;
@@ -75,12 +75,13 @@ void ProcessCommand(uint8_t* rx_buf, uint8_t* tx_buf)
 {
     msg_type_t msg_type = rx_buf[0];
     tx_buf[0] = msg_type;
+    uint16_t argument = rx_buf[1] << 8 | rx_buf[2];
     switch (msg_type) {
         case MSG_TYPE_HELLO:
             tx_buf[1] = ProcessHelloCommand();
             break;
         case MSG_TYPE_SET_TIME:
-            tx_buf[1] = ProcessSetTimeCommand(rx_buf[1]);
+            tx_buf[1] = ProcessSetTimeCommand(argument);
             break;
         case MSG_TYPE_START_TIMER:
             tx_buf[1] = ProcessStartTimerCommand();
