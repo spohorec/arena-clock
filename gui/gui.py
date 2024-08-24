@@ -56,9 +56,9 @@ class Timer(QObject):
     def GetTimerDoneSignal(self):
         return self._timer_done_signal
     def GetTimerStartSignal(self):
-        return self._timer_start_signal
+        return self._time_start_signal
     def GetTimerPauseSignal(self):
-        return self._timer_pause_signal
+        return self._time_pause_signal
     def GetTimeSetSignal(self):
         return self._time_set_signal
 
@@ -75,9 +75,9 @@ class Timer(QObject):
 
     #Handle timer actions
     def SetTime(self, time_s):
-        if (time_s > 255) || (time_s < 0):
+        if (time_s > 255) or (time_s < 0):
             return
-        if self._state != self.STATE_IDLE
+        if self._state != self.STATE_IDLE:
             # Can only set time when system is idle
             return
         self._ser.write(bytearray([2, time_s]))
